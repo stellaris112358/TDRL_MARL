@@ -1,0 +1,31 @@
+defaults:
+  - sac
+  - _self_
+
+num_unsup_steps: 9000 # unsupervised warm up steps
+num_interact: 5000  # frequency of rewrd model learning
+
+# agent settings
+algorithm: RewardModel
+
+# steps settings
+num_seed_steps: 1000
+
+# reward model
+size_segment: 50
+activation: tanh
+reward_lr: 0.0003
+large_batch: 10
+reset_update: 100
+acc_threshold: 0.99
+
+ensemble_size: 3  # ensemble size of reward network
+
+reward_batch: 100
+reward_update: 50
+
+traj_max_size: 100
+
+
+# scheduling
+reward_schedule: 0

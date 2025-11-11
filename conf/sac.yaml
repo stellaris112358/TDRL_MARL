@@ -1,0 +1,72 @@
+
+# variable parameters
+seed: 42
+device: cuda
+env: walker_stand
+
+# training settings
+actor_lr: 0.0005
+critic_lr: 0.0005
+batch_size: 1024
+num_train_steps: 500000
+critic_hidden_dim: 1024
+critic_hidden_depth: 2
+actor_hidden_depth: 2
+actor_hidden_dim: 1024
+
+
+
+# agent settings
+algorithm: SAC
+agent_name: sac
+discount: 0.99
+init_temperature: 0.1
+alpha_lr: 1e-4
+alpha_betas: [0.9, 0.999]
+actor_betas: [0.9, 0.999]
+actor_update_frequency: 1
+critic_betas: [0.9, 0.999]
+critic_tau: 0.005
+critic_target_update_frequency: 2
+learnable_temperature: True
+actor_log_std_bounds: [-5, 2]
+topK: 5
+
+# steps settings
+replay_buffer_capacity: 1000000
+num_seed_steps: 5000
+num_unsup_steps: 0
+
+# eval settings
+eval_frequency: 10000
+num_eval_episodes: 10
+reset_update: 100
+
+# logging settings
+log_save_tb: True
+log_frequency: 1000
+eval_log_name: eval
+train_log_name: train
+save_model: True
+
+
+# video settings
+save_video: True
+
+# note
+note: ""
+
+hydra:
+  run:
+    dir: ./exp_records/${env}/${algorithm}/${hydra.job.override_dirname}/${seed}/${now:%Y%m%d-%H%M%S}
+  job:
+    chdir: True
+    config:
+      override_dirname:
+        exclude_keys:
+          - env
+          - device
+          - num_train_steps
+          - seed
+          - algorithm
+          

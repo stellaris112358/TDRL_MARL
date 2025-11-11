@@ -1,0 +1,44 @@
+# variable parameters
+seed: 42
+device: cuda
+env: walker_stand
+n_envs: 16      # of parallel environments
+
+agent_name: ppo
+algorithm: PPO
+
+n_steps: 500    # of steps to run for each environment per update
+lr: 3e-4
+num_train_steps: 1000000  # total timesteps
+batch_size: 64
+ent_coef: 0.0
+gae_lambda: 0.92        # "Factor for trade-off of bias vs variance
+clip_init: 0.4            # Initial value of clipping
+n_epochs: 20              # Number of epoch when optimizing the surrogate loss
+normalize: True           # Normalization Observation
+
+hidden_dim: 1024
+num_layer: 2
+
+use_sde: True       # Whether to use generalized State Dependent Exploration
+sde_freq: 4      # Sample a new noise matrix every n steps
+
+
+save_tb: True
+
+# note
+note: ""
+
+hydra:
+  run:
+    dir: ./exp_records/${env}/${algorithm}/${hydra.job.override_dirname}/${seed}/${now:%Y%m%d-%H%M%S}
+  job:
+    chdir: True
+    config:
+      override_dirname:
+        exclude_keys:
+          - env
+          - device
+          - num_train_steps
+          - seed
+          - algorithm

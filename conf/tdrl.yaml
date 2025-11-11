@@ -1,0 +1,18 @@
+defaults:
+  - reward_model
+  - _self_
+
+# agent settings
+algorithm: TdRL
+
+return_update: 50
+return_ensemble_size: 3 # emsemble size of return network
+use_kan: false  # whether use kan network in return network
+spectral_norm: false  # whether use spectral norm in return network
+loss_combine: "early_stop"  # weight, grad_norm, early_stop
+change_penalty: 0.0  # activate if loss_combine is weight
+mse_coef: 1 # activate if loss_combine is grad_norm
+es_coef: 10  # activate if loss_combine is eaerly_stop
+rew_decomp: true
+
+activation: null
