@@ -8,7 +8,7 @@ from datetime import datetime
 import dmc2gym
 import gym
 import metaworld
-import metaworld.envs.mujoco.env_dict as _env_dict
+import metaworld.env_dict as _env_dict
 import numpy as np
 import torch
 import torch.nn.functional as F
