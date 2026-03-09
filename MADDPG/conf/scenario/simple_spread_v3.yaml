@@ -1,0 +1,5 @@
+# PettingZoo MPE simple_spread_v3 场景配置
+scenario_name: simple_spread_v3
+
+# simple_spread_v3 全合作，无对手
+num_adversaries: 0
