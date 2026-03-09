@@ -1,0 +1,64 @@
+defaults:
+  - scenario: simple_spread_v3
+  - _self_
+
+# Hydra: 不切换工作目录，日志输出到 outputs/
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+# ── 训练时长 ──────────────────────────────────────────────
+time_steps: 2000000
+max_episode_len: 25
+
+# ── 核心 MADDPG 超参数 ────────────────────────────────────
+lr_actor: 1.0e-4
+lr_critic: 1.0e-3
+epsilon: 0.1
+noise_rate: 0.1
+gamma: 0.95
+tau: 0.01
+buffer_size: 500000
+batch_size: 256
+
+# ── 模型存档 ──────────────────────────────────────────────
+save_dir: ./model_tdrl
+save_rate: 20000
+model_dir: ""
+
+# ── 评估 ──────────────────────────────────────────────────
+evaluate_episodes: 10
+evaluate_episode_len: 25
+evaluate: false
+evaluate_rate: 1000
+
+# ── TdRL Reward Model ────────────────────────────────────
+tdrl:
+  # reward model
+  ensemble_size: 3
+  return_ensemble_size: 3
+  lr: 3.0e-4
+  mb_size: 128
+  size_segment: 25
+  max_size: 200
+  use_kan: false
+  spectral_norm: false
+  activation: null
+
+  # training schedule
+  loss_combine: "early_stop"     # "weight" | "early_stop"
+  change_penalty: 0.0
+  mse_coef: 1.0
+  es_coef: 10.0
+
+  # reward learning frequency
+  reward_update: 50              # 每 N 个 episode 训练一次 reward model
+  return_train_epochs: 5         # return network 训练轮数
+  reward_train_epochs: 5         # reward network 训练轮数
+  num_interact: 5000             # 开始学 reward model 前的预热步数
+  relabel_buffer: true           # 是否用学到的 reward 重标注 buffer
+
+  # seed (for reproducibility)
+  seed: 42

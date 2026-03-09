@@ -3,6 +3,7 @@ from .cartpole import CartPole_Balance
 from .walker import Walker_Stand, Walker_Walk, Walker_Run, Walker_Jump, Walker_Jump_Run
 from .cheetah import Cheetah_Run
 from .quadruped import Quadruped_Walk, Quadruped_Run
+from .spread import Spread_v3
 
 
 TestDict = {
@@ -18,4 +19,6 @@ TestDict = {
     
     "quadruped_walk": Quadruped_Walk,
     "quadruped_run": Quadruped_Run,
+    
+    "simple_spread_v3": Spread_v3,
 }
