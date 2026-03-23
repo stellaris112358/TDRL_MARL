@@ -1,0 +1,3 @@
+scenario_name: simple_tag
+num_adversaries: 1
+coop_tag: true

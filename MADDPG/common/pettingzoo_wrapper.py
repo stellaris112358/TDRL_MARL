@@ -1,102 +1,133 @@
-"""
-PettingZoo Parallel API → 旧版 MPE 接口适配器
+"""PettingZoo Parallel API -> legacy MADDPG environment adapter."""
 
-将 PettingZoo parallel_env 封装成与原项目 runner.py / agent.py 兼容的接口：
-  - env.reset()  -> list of observations
-  - env.step(actions)  -> (obs_list, reward_list, done, info)
-  - env.n  -> total agent count
-  - env.observation_space[i]
-  - env.action_space[i]
+from __future__ import annotations
 
-注意：PettingZoo simple_spread_v3(continuous_actions=True) 的动作范围为 [0, 1]，
-     而原 MADDPG Actor 输出 tanh ∈ [-1, 1]。
-     本 wrapper 在 step() 内将动作从 [-1, 1] 线性映射到 [0, 1]，
-     算法侧无需任何改动。
-"""
+from importlib import import_module
 
 import numpy as np
-from importlib import import_module
+
+
+def _scenario_candidates(name: str):
+    if not name.endswith("_v3"):
+        yield f"{name}_v3"
+    yield name
+
+
+def _import_pz_module(scenario_name: str):
+    last_error = None
+    for candidate in _scenario_candidates(scenario_name):
+        for prefix in ("pettingzoo.mpe", "mpe2"):
+            module_name = f"{prefix}.{candidate}"
+            try:
+                module = import_module(module_name)
+                if hasattr(module, "parallel_env"):
+                    return module, candidate
+            except ModuleNotFoundError as exc:
+                last_error = exc
+    if last_error is not None:
+        raise last_error
+    raise ModuleNotFoundError(f"Unable to resolve scenario '{scenario_name}'")
 
 
 class PettingZooWrapper:
-    """将 PettingZoo Parallel API 封装为旧版 MPE 风格接口。"""
+    """Wrap a PettingZoo ParallelEnv with the list-based interface used here."""
 
     def __init__(self, parallel_env):
         self._env = parallel_env
-        # 初始化一次以获取 agents 列表（PettingZoo 要求先 reset）
-        _obs, _ = self._env.reset()
-        self.agents = list(self._env.agents)
-        self.n = len(self.agents)
-        self.observation_space = [self._env.observation_space(a) for a in self.agents]
-        self.action_space = [self._env.action_space(a) for a in self.agents]
+        self.metadata = getattr(parallel_env, "metadata", {})
 
-    # ── 旧版 MPE 接口 ──────────────────────────────────────
+        self._env.reset()
+        self._refresh_agent_layout()
+        self.n = len(self.agents)
+        self.observation_space = [self._env.observation_space(agent) for agent in self.agents]
+        self.action_space = [self._env.action_space(agent) for agent in self.agents]
+
+    def _ordered_agents(self):
+        base_agents = list(getattr(self._env, "agents", []))
+        custom_order = list(getattr(self._env, "agent_order", []))
+        possible_agents = list(getattr(self._env, "possible_agents", base_agents))
+        if custom_order:
+            return list(custom_order)
+        if base_agents:
+            return base_agents
+        return possible_agents
+
+    def _refresh_agent_layout(self):
+        self.agents = self._ordered_agents()
+        self.learning_agents = list(getattr(self._env, "learning_agents", self.agents))
+        self.fixed_policy_agents = list(getattr(self._env, "fixed_policy_agents", []))
 
     def reset(self):
         obs_dict, _ = self._env.reset()
-        return [obs_dict[a] for a in self.agents]
+        self._refresh_agent_layout()
+        return [obs_dict[agent] for agent in self.agents]
 
     def step(self, actions):
-        """
-        actions: list of np.ndarray, 每个元素范围 [-1, 1]（MADDPG 侧约定）
-        内部映射到 PettingZoo 要求的 [0, 1]
-        """
-        # [-1, 1] -> [0, 1]，强制转为 float32 避免 dtype 校验警告
-        mapped = [((np.clip(a, -1.0, 1.0) + 1.0) / 2.0).astype(np.float32) for a in actions]
-        action_dict = {agent: mapped[i] for i, agent in enumerate(self.agents)}
+        if len(actions) != len(self.agents):
+            raise ValueError(
+                f"Expected {len(self.agents)} actions for agents {self.agents}, got {len(actions)}"
+            )
+
+        mapped_actions = [
+            ((np.clip(action, -1.0, 1.0) + 1.0) / 2.0).astype(np.float32) for action in actions
+        ]
+        action_dict = {agent: mapped_actions[i] for i, agent in enumerate(self.agents)}
 
         obs_dict, rew_dict, term_dict, trunc_dict, info_dict = self._env.step(action_dict)
+        self._refresh_agent_layout()
 
-        # 若某 agent 已结束则用零向量填充观测
         obs_list = [
-            obs_dict.get(a, np.zeros(self.observation_space[i].shape, dtype=np.float32))
-            for i, a in enumerate(self.agents)
+            obs_dict.get(agent, np.zeros(self.observation_space[i].shape, dtype=np.float32))
+            for i, agent in enumerate(self.agents)
         ]
-        r_list = [float(rew_dict.get(a, 0.0)) for a in self.agents]
+        reward_list = [float(rew_dict.get(agent, 0.0)) for agent in self.agents]
         done = any(term_dict.values()) or any(trunc_dict.values())
-        return obs_list, r_list, done, info_dict
+        return obs_list, reward_list, done, info_dict
 
-    def render(self):
+    def render(self, mode=None, **kwargs):
         try:
-            self._env.render()
+            return self._env.render()
         except Exception:
-            # 无显示器（headless）环境下忽略渲染异常
-            pass
+            return None
+
+    def close(self):
+        if hasattr(self._env, "close"):
+            return self._env.close()
+        return None
 
 
 def make_pz_env(args):
-    """
-    根据 args.scenario_name 动态加载 PettingZoo MPE 场景，
-    并将所有环境相关参数（obs_shape、action_shape 等）写回 args。
-    """
-    scenario = args.scenario_name  # e.g. "simple_spread_v3"
+    """Create a PettingZoo MPE env and write back MADDPG-compatible metadata."""
 
-    # 动态导入，兼容 pettingzoo.mpe 和 mpe2 等不同命名
-    try:
-        mod = import_module(f"pettingzoo.mpe.{scenario}")
-    except ModuleNotFoundError:
-        mod = import_module(f"mpe2.{scenario}")
+    scenario_name = args.scenario_name
+    module, resolved_scenario = _import_pz_module(scenario_name)
 
     render_mode = "human" if args.evaluate else None
-    raw_env = mod.parallel_env(
+    raw_env = module.parallel_env(
         max_cycles=args.max_episode_len,
         continuous_actions=True,
         render_mode=render_mode,
     )
+
+    if getattr(args, "coop_tag", False) and resolved_scenario.startswith("simple_tag"):
+        try:
+            from .simple_tag_coop import SimpleTagCoopParallelEnv
+        except Exception:
+            from common.simple_tag_coop import SimpleTagCoopParallelEnv
+
+        raw_env = SimpleTagCoopParallelEnv(raw_env)
+
     env = PettingZooWrapper(raw_env)
 
-    # 写入 args（与原 make_env 保持字段一致）
     args.n_players = env.n
-    # simple_spread_v3 全合作；若有对手可在 config 中设置 num_adversaries
-    args.n_agents = env.n - args.num_adversaries
+    args.n_agents = len(getattr(env, "learning_agents", [])) or (env.n - args.num_adversaries)
     args.obs_shape = [env.observation_space[i].shape[0] for i in range(args.n_agents)]
-    # continuous Box(5,) 用 shape[0]；Discrete 用 .n
     args.action_shape = [
-        env.action_space[i].shape[0] if hasattr(env.action_space[i], 'shape')
-        else env.action_space[i].n
+        env.action_space[i].shape[0] if hasattr(env.action_space[i], "shape") else env.action_space[i].n
         for i in range(args.n_agents)
     ]
     args.high_action = 1
     args.low_action = -1
+    args.resolved_scenario_name = resolved_scenario
 
     return env, args
