@@ -1,0 +1,7 @@
+- scenario=simple_tag
+- time_steps=40
+- batch_size=8
+- evaluate_rate=20
+- evaluate_episodes=1
+- save_dir=./outputs/smoke_model_v2
+- save_rate=1000

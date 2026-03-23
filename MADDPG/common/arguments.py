@@ -33,6 +33,13 @@ def get_args():
     parser.add_argument("--evaluate-episode-len", type=int, default=100, help="length of episodes for evaluating")
     parser.add_argument("--evaluate", type=bool, default=False, help="whether to evaluate the model")
     parser.add_argument("--evaluate-rate", type=int, default=1000, help="how often to evaluate model")
+
+    # PettingZoo MPE simple_tag: make it cooperative by fixing prey policy + sharing team reward
+    parser.add_argument(
+        "--coop-tag",
+        action="store_true",
+        help="wrap simple_tag_v3 into a cooperative env: agent_0(prey) uses a rule policy, chasers share team reward",
+    )
     args = parser.parse_args()
 
     return args
