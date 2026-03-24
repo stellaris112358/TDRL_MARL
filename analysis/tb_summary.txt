@@ -1,0 +1,40 @@
+=== /media/asus/ubuntumemory/MARL/TDRL_MARL/MADDPG/model/simple_spread_v3/tb_logs/events.out.tfevents.1773062237.asus-System-Product-Name.629782.0 (baseline) ===
+Scalar tags (13): eval/mean_return, explore/epsilon, explore/noise, loss/actor_agent0, loss/actor_agent1, loss/actor_agent2, loss/critic_agent0, loss/critic_agent1, loss/critic_agent2, reward/agent0_episode_return, reward/agent1_episode_return, reward/agent2_episode_return, reward/mean_episode_return
+eval/mean_return: count=1999, first=-32.2029@40, last=-21.1543@79960, max=-12.8489@66200, min=-42.2816@80
+explore/epsilon: count=4000, first=0.1000@0, last=0.0500@1999500, max=0.1000@0, min=0.0500@100000
+explore/noise: count=4000, first=0.1000@0, last=0.0500@1999500, max=0.1000@0, min=0.0500@100000
+loss/actor_agent0: count=1999745, first=-0.0328@255, last=12.6951@1999999, max=14.0972@698770, min=-0.0328@255
+loss/actor_agent1: count=1999745, first=0.1475@255, last=12.8561@1999999, max=14.3579@698770, min=0.1475@255
+loss/actor_agent2: count=1999745, first=-0.0107@255, last=12.4528@1999999, max=13.8524@1375374, min=-0.0107@255
+loss/critic_agent0: count=1999745, first=0.9773@255, last=0.0790@1999999, max=4.3944@776315, min=0.0032@2224
+loss/critic_agent1: count=1999745, first=0.9317@255, last=0.0854@1999999, max=4.0088@776315, min=0.0023@1616
+loss/critic_agent2: count=1999745, first=0.9555@255, last=0.0777@1999999, max=3.7467@669562, min=0.0031@2023
+reward/agent0_episode_return: count=80000, first=-16.2434@1, last=-13.7874@80000, max=-0.2208@48201, min=-74.5275@68
+reward/agent1_episode_return: count=80000, first=-16.2434@1, last=-13.7874@80000, max=-0.2572@29441, min=-72.5275@68
+reward/agent2_episode_return: count=80000, first=-16.2434@1, last=-13.7874@80000, max=-0.2572@29441, min=-74.5275@68
+reward/mean_episode_return: count=80000, first=-16.2434@1, last=-13.7874@80000, max=-0.2572@29441, min=-73.8608@68
+
+=== /media/asus/ubuntumemory/MARL/TDRL_MARL/MADDPG/model_tdrl/simple_spread_v3/tb_logs/events.out.tfevents.1773733807.asus-System-Product-Name.82546.0 (tdrl) ===
+Scalar tags (22): eval/mean_return, explore/epsilon, explore/noise, loss/actor_agent0, loss/actor_agent1, loss/actor_agent2, loss/critic_agent0, loss/critic_agent1, loss/critic_agent2, reward/agent0_episode_return, reward/agent1_episode_return, reward/agent2_episode_return, reward/mean_episode_return, tdrl/ind_0, tdrl/ind_1, tdrl/ind_2, tdrl/pf_mean, tdrl/return_acc, tdrl/return_loss, tdrl/reward_loss_agent0, tdrl/reward_loss_agent1, tdrl/reward_loss_agent2
+eval/mean_return: count=1999, first=-38.3537@40, last=-22.4771@79960, max=-13.7265@36440, min=-38.3537@40
+explore/epsilon: count=4000, first=0.1000@0, last=0.0500@1999500, max=0.1000@0, min=0.0500@100000
+explore/noise: count=4000, first=0.1000@0, last=0.0500@1999500, max=0.1000@0, min=0.0500@100000
+loss/actor_agent0: count=1999745, first=-0.1763@255, last=-83.5184@1999999, max=4.4987@4959, min=-106.6301@1966495
+loss/actor_agent1: count=1999745, first=-0.0144@255, last=-84.0963@1999999, max=4.7574@4959, min=-105.5010@1981466
+loss/actor_agent2: count=1999745, first=-0.1463@255, last=-84.7763@1999999, max=4.6481@4959, min=-106.6401@1981466
+loss/critic_agent0: count=1999745, first=1.0210@255, last=11.5736@1999999, max=5216.5234@1913765, min=0.0028@9867
+loss/critic_agent1: count=1999745, first=1.0027@255, last=13.8629@1999999, max=5344.3228@1913765, min=0.0027@683
+loss/critic_agent2: count=1999745, first=1.0221@255, last=17.3138@1999999, max=4740.1367@1913765, min=0.0024@784
+reward/agent0_episode_return: count=80000, first=-17.8799@1, last=-21.5201@80000, max=-0.1548@78321, min=-67.9662@119
+reward/agent1_episode_return: count=80000, first=-17.8799@1, last=-20.0201@80000, max=-0.1548@78321, min=-67.9044@32
+reward/agent2_episode_return: count=80000, first=-17.8799@1, last=-23.0201@80000, max=-0.1548@78321, min=-67.9662@119
+reward/mean_episode_return: count=80000, first=-17.8799@1, last=-21.5201@80000, max=-0.1548@78321, min=-67.9044@32
+tdrl/ind_0: count=1596, first=-1.0003@5024, last=-0.6170@1998774, max=-0.5492@988774, min=-1.0003@5024
+tdrl/ind_1: count=1596, first=3.9100@5024, last=5.4850@1998774, max=7.1100@1060024, min=3.9100@5024
+tdrl/ind_2: count=1596, first=-1.8100@5024, last=-1.8200@1998774, max=-1.8000@11274, min=-1.8650@867524
+tdrl/pf_mean: count=1596, first=0.4950@5024, last=0.4900@1998774, max=0.5000@11274, min=0.4725@17524
+tdrl/return_acc: count=1596, first=0.9701@5024, last=1.0000@1998774, max=1.0000@91274, min=0.8775@1576274
+tdrl/return_loss: count=1596, first=0.5213@5024, last=0.0110@1998774, max=1.3589@1576274, min=0.0007@1993774
+tdrl/reward_loss_agent0: count=1596, first=0.2398@5024, last=901.1696@1998774, max=901.1696@1998774, min=0.2398@5024
+tdrl/reward_loss_agent1: count=1596, first=0.3085@5024, last=891.4042@1998774, max=891.4042@1998774, min=0.3085@5024
+tdrl/reward_loss_agent2: count=1596, first=0.2431@5024, last=775.0054@1998774, max=784.6597@1981274, min=0.2431@5024

@@ -17,12 +17,16 @@ train.py — 基于 Hydra 配置的 MADDPG 训练入口
 
 import os
 import sys
+import warnings
 from argparse import Namespace
 
 import hydra
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
+
+# silences pygame's pkg_resources deprecation noise that does not affect behavior
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated as an API.*", category=UserWarning)
 
 # 确保项目根目录在 sys.path 中（Hydra 可能改变 cwd）
 _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))

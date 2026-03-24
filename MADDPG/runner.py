@@ -88,9 +88,9 @@ class Runner:
                 ep_mean = float(np.mean(ep_rewards))
                 recent_reward = ep_mean
                 episode_id = (time_step + 1) // self.episode_limit
-                self.writer.add_scalar('reward/mean_episode_return', ep_mean, episode_id)
+                self.writer.add_scalar('reward/mean_episode_return', ep_mean, time_step)
                 for i in range(self.args.n_agents):
-                    self.writer.add_scalar(f'reward/agent{i}_episode_return', float(ep_rewards[i]), episode_id)
+                    self.writer.add_scalar(f'reward/agent{i}_episode_return', float(ep_rewards[i]), time_step)
 
             # 更新 tqdm postfix（每 50 步刷新一次，避免刷新过频）
             if time_step % 50 == 0:
@@ -108,6 +108,7 @@ class Runner:
                 returns.append(eval_return)
                 eval_episode = time_step // self.episode_limit
                 self.writer.add_scalar('eval/mean_return', eval_return, eval_episode)
+                np.save(self.save_path + '/returns.pkl', returns)
                 plt.figure()
                 plt.plot(range(len(returns)), returns)
                 plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
@@ -123,9 +124,8 @@ class Runner:
                 self.writer.add_scalar('explore/noise',   self.noise,   time_step)
                 self.writer.add_scalar('explore/epsilon', self.epsilon, time_step)
 
-            np.save(self.save_path + '/returns.pkl', returns)
-
         self.writer.close()
+        np.save(self.save_path + '/returns.pkl', returns)
 
     def evaluate(self):
         returns = []

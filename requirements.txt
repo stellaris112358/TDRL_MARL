@@ -7,4 +7,4 @@ scikit-image==0.25.2
 hydra-core==1.3.2
 gym==0.25.2
 cython==0.29.36
-git+https://github.com/rlworkgroup/metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb
+# git+https://github.com/rlworkgroup/metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb

@@ -9,9 +9,7 @@ PettingZoo Parallel API → 旧版 MPE 接口适配器
   - env.action_space[i]
 
 注意：PettingZoo simple_spread_v3(continuous_actions=True) 的动作范围为 [0, 1]，
-     而原 MADDPG Actor 输出 tanh ∈ [-1, 1]。
-     本 wrapper 在 step() 内将动作从 [-1, 1] 线性映射到 [0, 1]，
-     算法侧无需任何改动。
+    现 Actor 直接输出 sigmoid ∈ [0, 1]，无需额外映射。
 """
 
 import numpy as np
@@ -38,12 +36,11 @@ class PettingZooWrapper:
 
     def step(self, actions):
         """
-        actions: list of np.ndarray, 每个元素范围 [-1, 1]（MADDPG 侧约定）
-        内部映射到 PettingZoo 要求的 [0, 1]
+        actions: list of np.ndarray, 每个元素范围 [0, 1]
         """
-        # [-1, 1] -> [0, 1]，强制转为 float32 避免 dtype 校验警告
-        mapped = [((np.clip(a, -1.0, 1.0) + 1.0) / 2.0).astype(np.float32) for a in actions]
-        action_dict = {agent: mapped[i] for i, agent in enumerate(self.agents)}
+        # 直接剪裁到 [0, 1] 并转为 float32
+        clipped = [np.clip(a, 0.0, 1.0).astype(np.float32) for a in actions]
+        action_dict = {agent: clipped[i] for i, agent in enumerate(self.agents)}
 
         obs_dict, rew_dict, term_dict, trunc_dict, info_dict = self._env.step(action_dict)
 
@@ -77,7 +74,7 @@ def make_pz_env(args):
     except ModuleNotFoundError:
         mod = import_module(f"mpe2.{scenario}")
 
-    render_mode = "human" if args.evaluate else None
+    render_mode = "human" if args.evaluate else "rgb_array"
     raw_env = mod.parallel_env(
         max_cycles=args.max_episode_len,
         continuous_actions=True,

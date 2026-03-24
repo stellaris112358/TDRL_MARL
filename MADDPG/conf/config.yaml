@@ -14,22 +14,22 @@ time_steps: 2000000
 max_episode_len: 25
 
 # ── 核心超参数 ──────────────────────────────────────────────
-lr_actor: 1.0e-4
+lr_actor: 2.0e-3
 lr_critic: 1.0e-3
 epsilon: 0.1
 noise_rate: 0.1
 gamma: 0.95
-tau: 0.01
+tau: 0.001
 buffer_size: 500000
 batch_size: 256
 
 # ── 模型存档 ──────────────────────────────────────────────
-save_dir: ./model
+save_dir: ./MADDPG/model
 save_rate: 20000
 model_dir: ""
 
 # ── 评估 ──────────────────────────────────────────────────
-evaluate_episodes: 10
+evaluate_episodes: 5
 evaluate_episode_len: 25
 evaluate: false
 evaluate_rate: 1000
