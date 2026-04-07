@@ -24,7 +24,7 @@ buffer_size: 500000
 batch_size: 256
 
 # ── 模型存档 ──────────────────────────────────────────────
-save_dir: ./model_tdrl
+save_dir: ./model_tdrl/${now:%Y-%m-%d}/${now:%H-%M-%S}
 save_rate: 20000
 model_dir: ""
 

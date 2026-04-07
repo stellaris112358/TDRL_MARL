@@ -1,8 +1,0 @@
-defaults:
-  - reward_model
-  - _self_
-
-# agent settings
-algorithm: LearnReturn
-
-activation: null

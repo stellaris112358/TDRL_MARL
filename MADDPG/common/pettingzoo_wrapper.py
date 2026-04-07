@@ -111,7 +111,7 @@ def make_pz_env(args):
     module, resolved_scenario = _import_pz_module(scenario_name)
 
     render_mode = "human" if args.evaluate else "rgb_array"
-    raw_env = mod.parallel_env(
+    raw_env = module.parallel_env(
         max_cycles=args.max_episode_len,
         continuous_actions=True,
         render_mode=render_mode,

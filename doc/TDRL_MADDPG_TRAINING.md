@@ -151,7 +151,7 @@ TensorBoard 日志写入路径：
 - `loss/actor_agent{i}`：每个智能体 Actor loss（step 粒度）
 - `loss/critic_agent{i}`：每个智能体 Critic loss（step 粒度）
 - `reward/mean_episode_return`：每个 episode 平均回报
-- `reward/agent{i}_episode_return`：每个 episode 单智能体回报
+- `reward/agent{i}_episode_return`：每个 episode 的单个智能体回报
 - `eval/mean_return`：评估模式平均回报（按 evaluate 周期）
 - `explore/noise`：探索噪声强度（每 500 step 记录）
 - `explore/epsilon`：探索 ε（每 500 step 记录）

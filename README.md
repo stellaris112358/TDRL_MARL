@@ -1,55 +1,45 @@
-# TdRL
+# TDRL_MARL
 
-repo for Test-driven Reinforcement Learning
+This repository now keeps only the multi-agent TdRL code path:
+
+- `MADDPG/train.py`: baseline MADDPG training
+- `MADDPG/train_tdrl.py`: MADDPG + TdRL reward learning
+- `reward_model/reward_model_ma_tdrl.py`: multi-agent return/reward model
+- `tester/spread.py`: `simple_spread_v3` behavioral tests
+
+The previous single-agent SAC/PPO, DMControl, MetaWorld, and SB3-based code has been removed to keep the project focused and easier to maintain.
 
 ## Quick Start
 
-Recommand: Ubuntu 24.04, python>=3.10, 4 core CPU or higher, 16GB RAM or higher, NVIDIA RTX 3060 or higher.
+Recommended: Python 3.10+ and a recent PyTorch install that matches your CUDA environment.
 
-install system requirements:
-
-```shell
-sudo apt install patchelf libosmesa6-dev
-sudo apt install libegl1-mesa libegl1-mesa-dev libgl1-mesa-glx libgl1-mesa-dev libgles2-mesa-dev
-sudo apt install ffmpeg
-```
-
-download mujoco:
-
-```shell
-wget https://github.com/google-deepmind/mujoco/releases/download/2.1.0/mujoco210-linux-x86_64.tar.gz
-mkdir -p ~/.mujoco
-tar -xvf mujoco210-linux-x86_64.tar.gz -C ~/.mujoco
-rm mujoco210-linux-x86_64.tar.gz
-```
-
-add following lines to `~/.bashrc` or `~/.zshrc`:
-
-```shell
-export LD_LIBRARY_PATH=$HOME/.mujoco/mujoco210/bin:$LD_LIBRARY_PATH
-export MUJOCO_PY_MUJOCO_PATH=$HOME/.mujoco/mujoco210
-```
-
-create conda env:
-
-```shell
-conda create -n tdrl python=3.10
-```
-
-install python requirements:
-
-```shell
+```bash
 pip install -r requirements.txt
-cd dmc2gym
-pip install .
+cd MADDPG
+python train_tdrl.py
 ```
 
-train agent:
+Useful overrides:
 
-```shell
-python train_tdrl.py env=walker_run seed=0 device=cuda num_train_steps=1000_000
+```bash
+python train_tdrl.py time_steps=1000000 tdrl.reward_update=100
+python train_tdrl.py evaluate=true
+python train.py
 ```
 
-## Config
+## Project Layout
 
-We use `hydra` to config the algorithm settings. You can change the config by modify the `yaml` files in `conf` directory, or add the option in cmds.
+```text
+TDRL_MARL/
+├── MADDPG/                  # Multi-agent training entrypoints and MADDPG implementation
+├── reward_model/           # MATdRLRewardModel
+├── tester/                 # Tester base class + simple_spread_v3 tests
+├── fastkan/                # Optional FastKAN backbone for the return network
+├── doc/                    # MARL-focused documentation
+└── requirements.txt
+```
+
+## Docs
+
+- `doc/TDRL_MADDPG_TRAINING.md`: training loop and reward-model update flow
+- `MADDPG/README.md`: MADDPG module notes

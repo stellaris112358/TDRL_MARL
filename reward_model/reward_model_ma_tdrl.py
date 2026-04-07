@@ -19,7 +19,7 @@ from scipy.stats import skew
 try:
     from gymnasium.wrappers.utils import RunningMeanStd
 except ImportError:
-    # fallback: 与 stable_baselines3 中一致的简易实现
+    # Minimal fallback to keep the MARL reward model self-contained.
     class RunningMeanStd:
         def __init__(self, shape=()):
             self.mean = np.zeros(shape, np.float64)
