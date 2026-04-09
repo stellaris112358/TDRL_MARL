@@ -146,16 +146,8 @@ class TdRLRunner(Runner):
                 ep_rewards[i] += r[i]
 
             # ── MADDPG update ──
-            if self.buffer.current_size >= self.args.batch_size:
-                transitions = self.buffer.sample(self.args.batch_size)
-                for idx, agent in enumerate(self.agents):
-                    other_agents = self.agents.copy()
-                    other_agents.remove(agent)
-                    a_loss, c_loss = agent.learn(transitions, other_agents)
-                    recent_actor_loss[idx] = a_loss
-                    recent_critic_loss[idx] = c_loss
-                    self.writer.add_scalar(f'loss/actor_agent{idx}', a_loss, time_step)
-                    self.writer.add_scalar(f'loss/critic_agent{idx}', c_loss, time_step)
+            if self._should_train_this_step(time_step):
+                self._run_maddpg_updates(time_step, recent_actor_loss, recent_critic_loss)
 
             # ── episode end bookkeeping ──
             if (time_step + 1) % self.episode_limit == 0:
@@ -190,24 +182,23 @@ class TdRLRunner(Runner):
                 returns.append(eval_return)
                 eval_episode = time_step // self.episode_limit
                 self.writer.add_scalar('eval/mean_return', eval_return, eval_episode)
-                plt.figure()
-                plt.plot(range(len(returns)), returns)
-                plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('average returns')
-                plt.savefig(self.save_path + '/plt.png', format='png')
-                plt.close()
+                if len(returns) % self.eval_save_interval == 0:
+                    self._save_returns(returns)
+                if len(returns) % self.eval_plot_interval == 0:
+                    self._save_eval_plot(returns)
 
             # ── exploration decay ──
             self.noise = max(0.05, self.noise - 0.0000005)
             self.epsilon = max(0.05, self.epsilon - 0.0000005)
 
-            if time_step % 500 == 0:
+            if time_step % self.explore_log_interval == 0:
                 self.writer.add_scalar('explore/noise', self.noise, time_step)
                 self.writer.add_scalar('explore/epsilon', self.epsilon, time_step)
 
-            np.save(self.save_path + '/returns.pkl', returns)
-
         self.writer.close()
+        self._save_returns(returns)
+        if returns:
+            self._save_eval_plot(returns)
 
     # ── reward model training subroutine ──────────────────
 

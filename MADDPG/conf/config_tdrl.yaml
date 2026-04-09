@@ -14,14 +14,16 @@ time_steps: 2000000
 max_episode_len: 25
 
 # ── 核心 MADDPG 超参数 ────────────────────────────────────
-lr_actor: 2.0e-3
-lr_critic: 1.0e-3
+lr_actor: 2.0e-4
+lr_critic: 1.0e-4
 epsilon: 0.1
 noise_rate: 0.1
 gamma: 0.95
 tau: 0.001
 buffer_size: 500000
 batch_size: 256
+train_interval: 25          # 每多少个环境 step 触发一次 MADDPG 更新
+updates_per_train: 1
 
 # ── 模型存档 ──────────────────────────────────────────────
 save_dir: ./model_tdrl/${now:%Y-%m-%d}/${now:%H-%M-%S}
@@ -33,6 +35,10 @@ evaluate_episodes: 5
 evaluate_episode_len: 25
 evaluate: false
 evaluate_rate: 1000
+loss_log_interval: 10
+explore_log_interval: 1000
+eval_save_interval: 1
+eval_plot_interval: 1
 
 # ── TdRL Reward Model ────────────────────────────────────
 tdrl:

@@ -1,0 +1,9 @@
+- time_steps=30
+- batch_size=8
+- train_interval=4
+- updates_per_train=1
+- evaluate_rate=1000000
+- save_dir=./model_tdrl/verify_speed_cfg
+- tdrl.num_interact=100000
+- tdrl.reward_update=100
+- save_rate=1000000

@@ -1,0 +1,7 @@
+- time_steps=20
+- batch_size=8
+- train_interval=4
+- updates_per_train=1
+- evaluate_rate=1000000
+- save_rate=1000000
+- save_dir=./model/verify_speed_cfg

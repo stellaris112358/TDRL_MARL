@@ -1,0 +1,46 @@
+scenario:
+  scenario_name: simple_spread_v3
+  num_adversaries: 0
+time_steps: 30
+max_episode_len: 25
+lr_actor: 0.002
+lr_critic: 0.001
+epsilon: 0.1
+noise_rate: 0.1
+gamma: 0.95
+tau: 0.001
+buffer_size: 500000
+batch_size: 8
+train_interval: 4
+updates_per_train: 1
+save_dir: ./model_tdrl/verify_speed_cfg
+save_rate: 1000000
+model_dir: ''
+evaluate_episodes: 5
+evaluate_episode_len: 25
+evaluate: false
+evaluate_rate: 1000000
+loss_log_interval: 100
+explore_log_interval: 1000
+eval_save_interval: 2
+eval_plot_interval: 4
+tdrl:
+  ensemble_size: 3
+  return_ensemble_size: 3
+  lr: 0.0003
+  mb_size: 128
+  size_segment: 25
+  max_size: 200
+  use_kan: false
+  spectral_norm: false
+  activation: null
+  loss_combine: early_stop
+  change_penalty: 0.0
+  mse_coef: 1.0
+  es_coef: 10.0
+  reward_update: 100
+  return_train_epochs: 5
+  reward_train_epochs: 5
+  num_interact: 100000
+  relabel_buffer: true
+  seed: 42

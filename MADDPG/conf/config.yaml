@@ -22,9 +22,11 @@ gamma: 0.95
 tau: 0.001
 buffer_size: 500000
 batch_size: 256
+train_interval: 25          # 每多少个环境 step 触发一次 MADDPG 更新
+updates_per_train: 1       # 每次触发时执行多少轮参数更新
 
 # ── 模型存档 ──────────────────────────────────────────────
-save_dir: ./MADDPG/model
+save_dir: ./model/MADDPG/${now:%Y-%m-%d}/${now:%H-%M-%S}
 save_rate: 20000
 model_dir: ""
 
@@ -32,4 +34,8 @@ model_dir: ""
 evaluate_episodes: 5
 evaluate_episode_len: 25
 evaluate: false
-evaluate_rate: 1000
+evaluate_rate: 2500
+loss_log_interval: 10   # 每多少次训练更新一次 loss
+explore_log_interval: 1000
+eval_save_interval: 1      # 每多少次评估保存一次 returns.npy
+eval_plot_interval: 1      # 每多少次评估更新一次曲线图

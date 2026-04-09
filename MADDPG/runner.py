@@ -22,6 +22,17 @@ class Runner:
         self.save_path = self.args.save_dir + '/' + self.args.scenario_name
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
+
+        # Performance-related knobs. Defaults preserve current behavior when possible,
+        # while letting us reduce update and I/O overhead from config.
+        self.train_interval = max(1, int(getattr(args, 'train_interval', 1)))
+        self.updates_per_train = max(1, int(getattr(args, 'updates_per_train', 1)))
+        self.loss_log_interval = max(1, int(getattr(args, 'loss_log_interval', 100)))
+        self.explore_log_interval = max(1, int(getattr(args, 'explore_log_interval', 500)))
+        self.eval_save_interval = max(1, int(getattr(args, 'eval_save_interval', 1)))
+        self.eval_plot_interval = max(1, int(getattr(args, 'eval_plot_interval', 1)))
+        self.update_counter = 0
+
         # TensorBoard writer：日志写入 <save_path>/tb_logs/
         tb_log_dir = os.path.join(self.save_path, 'tb_logs')
         self.writer = SummaryWriter(log_dir=tb_log_dir)
@@ -34,6 +45,37 @@ class Runner:
             agent = Agent(i, self.args)
             agents.append(agent)
         return agents
+
+    def _should_train_this_step(self, time_step):
+        return (
+            self.buffer.current_size >= self.args.batch_size
+            and (time_step + 1) % self.train_interval == 0
+        )
+
+    def _run_maddpg_updates(self, time_step, recent_actor_loss, recent_critic_loss):
+        for _ in range(self.updates_per_train):
+            transitions = self.buffer.sample(self.args.batch_size)
+            self.update_counter += 1
+            for idx, agent in enumerate(self.agents):
+                other_agents = self.agents.copy()
+                other_agents.remove(agent)
+                a_loss, c_loss = agent.learn(transitions, other_agents)
+                recent_actor_loss[idx] = a_loss
+                recent_critic_loss[idx] = c_loss
+                if self.update_counter % self.loss_log_interval == 0:
+                    self.writer.add_scalar(f'loss/actor_agent{idx}', a_loss, self.update_counter)
+                    self.writer.add_scalar(f'loss/critic_agent{idx}', c_loss, self.update_counter)
+
+    def _save_returns(self, returns):
+        np.save(self.save_path + '/returns.pkl', returns)
+
+    def _save_eval_plot(self, returns):
+        plt.figure()
+        plt.plot(range(len(returns)), returns)
+        plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
+        plt.ylabel('average returns')
+        plt.savefig(self.save_path + '/plt.png', format='png')
+        plt.close()
 
     def run(self):
         returns = []
@@ -71,17 +113,8 @@ class Runner:
             for i in range(self.args.n_agents):
                 ep_rewards[i] += r[i]
 
-            if self.buffer.current_size >= self.args.batch_size:
-                transitions = self.buffer.sample(self.args.batch_size)
-                for idx, agent in enumerate(self.agents):
-                    other_agents = self.agents.copy()
-                    other_agents.remove(agent)
-                    a_loss, c_loss = agent.learn(transitions, other_agents)
-                    recent_actor_loss[idx]  = a_loss
-                    recent_critic_loss[idx] = c_loss
-                    # TensorBoard: 每步记录各智能体 loss
-                    self.writer.add_scalar(f'loss/actor_agent{idx}',  a_loss, time_step)
-                    self.writer.add_scalar(f'loss/critic_agent{idx}', c_loss, time_step)
+            if self._should_train_this_step(time_step):
+                self._run_maddpg_updates(time_step, recent_actor_loss, recent_critic_loss)
 
             # episode 结束时记录本 episode 奖励
             if (time_step + 1) % self.episode_limit == 0:
@@ -108,24 +141,23 @@ class Runner:
                 returns.append(eval_return)
                 eval_episode = time_step // self.episode_limit
                 self.writer.add_scalar('eval/mean_return', eval_return, eval_episode)
-                np.save(self.save_path + '/returns.pkl', returns)
-                plt.figure()
-                plt.plot(range(len(returns)), returns)
-                plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('average returns')
-                plt.savefig(self.save_path + '/plt.png', format='png')
-                plt.close()
+                if len(returns) % self.eval_save_interval == 0:
+                    self._save_returns(returns)
+                if len(returns) % self.eval_plot_interval == 0:
+                    self._save_eval_plot(returns)
 
             self.noise = max(0.05, self.noise - 0.0000005)
             self.epsilon = max(0.05, self.epsilon - 0.0000005)
 
             # TensorBoard: 探索参数
-            if time_step % 500 == 0:
+            if time_step % self.explore_log_interval == 0:
                 self.writer.add_scalar('explore/noise',   self.noise,   time_step)
                 self.writer.add_scalar('explore/epsilon', self.epsilon, time_step)
 
         self.writer.close()
-        np.save(self.save_path + '/returns.pkl', returns)
+        self._save_returns(returns)
+        if returns:
+            self._save_eval_plot(returns)
 
     def evaluate(self):
         returns = []
