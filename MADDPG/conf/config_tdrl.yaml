@@ -60,7 +60,7 @@ tdrl:
   es_coef: 10.0
 
   # reward learning frequency
-  reward_update: 100              # 每 N 个 episode 训练一次 reward model
+  reward_update: 50              # 每 N 个 episode 训练一次 reward model
   return_train_epochs: 5         # return network 训练轮数
   reward_train_epochs: 5         # reward network 训练轮数
   num_interact: 5000             # 开始学 reward model 前的预热步数

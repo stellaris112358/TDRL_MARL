@@ -1,0 +1,15 @@
+- time_steps=60
+- batch_size=8
+- train_interval=4
+- updates_per_train=1
+- evaluate_rate=1000000
+- save_dir=./model_tdrl/diag_verify
+- tdrl.num_interact=0
+- tdrl.reward_update=1
+- tdrl.return_train_epochs=1
+- tdrl.reward_train_epochs=1
+- tdrl.return_ensemble_size=1
+- tdrl.ensemble_size=1
+- tdrl.mb_size=8
+- tdrl.max_size=8
+- save_rate=1000000

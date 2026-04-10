@@ -208,8 +208,25 @@ class TdRLRunner(Runner):
 
         ind_mean, pf_mean = self.reward_model.prepare_training()
         self.writer.add_scalar('tdrl/pf_mean', float(np.mean(pf_mean)), time_step)
-        for i, v in enumerate(ind_mean):
-            self.writer.add_scalar(f'tdrl/ind_{i}', float(v), time_step)
+        for i, v in enumerate(pf_mean):
+            self.writer.add_scalar(f'tdrl/pf_{i}', float(v), time_step)
+        if hasattr(self.reward_model, 'pass_count'):
+            for i, v in enumerate(self.reward_model.pass_count):
+                self.writer.add_scalar(f'tdrl/pf_count_{i}', float(v), time_step)
+
+        inds = getattr(self.reward_model, 'inds', None)
+        if inds is not None and len(inds):
+            ind_std = np.std(inds, axis=0)
+            ind_min = np.min(inds, axis=0)
+            ind_max = np.max(inds, axis=0)
+            for i, v in enumerate(ind_mean):
+                self.writer.add_scalar(f'tdrl/ind_{i}', float(v), time_step)
+                self.writer.add_scalar(f'tdrl/ind_std_{i}', float(ind_std[i]), time_step)
+                self.writer.add_scalar(f'tdrl/ind_min_{i}', float(ind_min[i]), time_step)
+                self.writer.add_scalar(f'tdrl/ind_max_{i}', float(ind_max[i]), time_step)
+        else:
+            for i, v in enumerate(ind_mean):
+                self.writer.add_scalar(f'tdrl/ind_{i}', float(v), time_step)
 
         # train return network
         for epoch in range(self.tdrl_cfg.get("return_train_epochs", 5)):

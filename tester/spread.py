@@ -32,10 +32,15 @@ class Spread_v3(Tester):
         self.ds = n_agents * obs_dim        # 54
         self.da = n_agents * act_dim        # 15
 
-        # thresholds
-        self._cover_dist = 0.15       # distance to count as "covering" a landmark
-        self._collision_dist = 0.038  # agent radius * 2 ≈ 0.075, half for overlap
-        self._cover_ratio = 0.8       # fraction of steps that need coverage
+        # Thresholds aligned with the underlying PettingZoo task:
+        # - occupied_landmarks in benchmark_data() uses 0.1
+        # - collision happens when dist < agent1.size + agent2.size = 0.3
+        self._cover_dist = 0.10
+        self._agent_radius = 0.15
+        self._collision_dist = self._agent_radius * 2.0
+        self._terminal_window = 8
+        self._terminal_cover_ratio = 0.5
+        self._max_collision_rate = 0.10
 
         self._pf_tests = [
             self.pf_all_covered,
@@ -43,6 +48,7 @@ class Spread_v3(Tester):
         ]
 
         self._ind_tests = [
+            self.ind_global_reward_proxy,
             self.ind_avg_min_dist,
             self.ind_coverage_count,
             self.ind_collision_count,
@@ -109,27 +115,37 @@ class Spread_v3(Tester):
     @batch
     def pf_all_covered(self, inputs: np.ndarray, s_nexts: np.ndarray):
         """
-        Pass if, for most timesteps, every landmark is covered by
-        at least one agent (via optimal assignment).
+        Pass if landmark coverage is achieved near the end of the episode.
+        This is less brittle than requiring almost the whole trajectory to stay
+        fully covered, and better matches the task's "get everyone onto targets"
+        objective.
         """
         agent_pos, _, lm_abs = self._parse_s_nexts(s_nexts)
         dist_mat = self._compute_agent_landmark_dists(agent_pos, lm_abs)  # (T, A, L)
         T = dist_mat.shape[0]
+        start = max(0, T - self._terminal_window)
         covered_steps = 0
-        for t in range(T):
+        for t in range(start, T):
             n_covered = self._optimal_assignment_coverage(dist_mat[t])
             if n_covered >= self.n_landmarks:
                 covered_steps += 1
-        return covered_steps / T >= self._cover_ratio
+        denom = max(1, T - start)
+        return covered_steps / denom >= self._terminal_cover_ratio
 
     @batch
     def pf_no_collision(self, inputs: np.ndarray, s_nexts: np.ndarray):
         """
-        Pass if no inter-agent collisions occur throughout the trajectory.
+        Pass if collisions remain rare near the end of the trajectory.
+        Requiring zero collisions for the whole segment tends to produce overly
+        sparse PF labels in early training.
         """
         agent_pos, _, _ = self._parse_s_nexts(s_nexts)
         pair_dists = self._compute_agent_dists(agent_pos)  # (T, n_pairs)
-        return bool(np.all(pair_dists > self._collision_dist))
+        T = pair_dists.shape[0]
+        start = max(0, T - self._terminal_window)
+        tail_pairs = pair_dists[start:]
+        collision_rate = float(np.mean(tail_pairs < self._collision_dist))
+        return collision_rate <= self._max_collision_rate
 
     # ── Indicative tests ─────────────────────────────────────
 
@@ -148,6 +164,20 @@ class Spread_v3(Tester):
             total += dist_mat[t][row_ind, col_ind].mean()
         avg = total / T
         return -avg  # negative: closer is better
+
+    @batch
+    def ind_global_reward_proxy(self, inputs: np.ndarray, s_nexts: np.ndarray):
+        """
+        Proxy for the environment's global reward:
+        for each landmark and timestep, take the nearest-agent distance and sum it.
+        Higher is better, so return the negative mean per-timestep distance sum.
+        Averaging by horizon keeps this feature on a comparable scale to other
+        indicative tests.
+        """
+        agent_pos, _, lm_abs = self._parse_s_nexts(s_nexts)
+        dist_mat = self._compute_agent_landmark_dists(agent_pos, lm_abs)  # (T, A, L)
+        # Environment global reward is -sum_l min_a dist(a, l); average by T
+        return -float(dist_mat.min(axis=1).sum(axis=-1).mean())
 
     @batch
     def ind_coverage_count(self, inputs: np.ndarray, s_nexts: np.ndarray):
